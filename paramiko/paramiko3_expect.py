@@ -26,9 +26,6 @@ def main():
         # Create a client interaction class which will interact with the host
         with SSHClientInteraction(client, timeout=5, display=False) as interact:
             interact.expect(PROMPT)
-
-            # Run the first command and capture the cleaned output, if you want
-            # the output without cleaning, simply grab current_output instead.
             interact.send('enable')
             interact.expect('[Pp]assword')
             interact.send(ENABLE)
@@ -42,7 +39,7 @@ def main():
             interact.send('exit')
             interact.expect()
 
-        # Print the output of each command
+        # Print the output of command
         print(cmd_output)
 
     except paramiko.AuthenticationException:
