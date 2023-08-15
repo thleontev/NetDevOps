@@ -14,15 +14,30 @@ def send_show_command(
     short_pause=1,
     long_pause=5,
 ):
-    cl = paramiko.SSHClient()
-    cl.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    cl.connect(
-        hostname=ip,
-        username=username,
-        password=password,
-        look_for_keys=False,
-        allow_agent=False,
-    )
+    try:
+        cl = paramiko.SSHClient()
+        cl.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        cl.connect(
+            hostname=ip,
+            username=username,
+            password=password,
+            look_for_keys=False,
+            allow_agent=False,
+            timeout=10
+            )
+    except paramiko.AuthenticationException:
+        print("Authentication failed, please verify your credentials: %s")
+        return
+    except paramiko.SSHException as sshException:
+        print("Unable to establish SSH connection: %s" % sshException)
+        return
+    except socket.error as e:
+        print("Unable to establish SSH connection: %s" % e)
+        return
+    except Exception as e:
+        print(e.args)
+        return
+
     with cl.invoke_shell() as ssh:
         ssh.send("enable\n")
         ssh.send(f"{enable}\n")
