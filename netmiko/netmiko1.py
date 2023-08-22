@@ -21,38 +21,33 @@ from netmiko import (
     NetMikoAuthenticationException,
 )
 
-logging.getLogger("paramiko").setLevel(logging.INFO)
-logging.getLogger("netmiko").setLevel(logging.INFO)
+# logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG) # NOSET,INFO,DEBUG
 
-logging.basicConfig(
-    format="{asctime} - {name} - {levelname} - {message}",
-    datefmt="%H:%M:%S",
-    style="{",
-    level=logging.INFOL,
-    filename="py_log.log",
-    filemode="w"
-)
+logfile = logging.FileHandler('logfile.log')
+logfile.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                              datefmt='%H:%M:%S')
+logfile.setFormatter(formatter)
+logger.addHandler(logfile)
 
-file_handler_info = logging.FileHandler('result_info.log')
-file_handler_info.setLevel(logging.INFO)
-stream_handler = logging.StreamHandler(SyntaxError)
-# stream_handler = logging.StreamHandler(sys.stdout)
-
-# IOS
+# regex
 version_pattern = re.compile(r'Cisco .+ Software .+ Version (\S+),') 
-image_pattern = re.compile(r'image file is "flash0:(\S+)"')
+image_pattern = re.compile(r'image file is "flash.*:(\S+)"')
 
 def send_show_command(device, commands):
     result = {}
     try:
         with ConnectHandler(**device) as ssh:
             host = device["host"]
-            logging.info(">>>> Connection ", host)
+            logger.info(">>>> Connection to {}".format(host))
             ssh.enable()
             for command in commands:
+                logger.info(">>>> Sending commmand \"{}\" to {}".format(command, host))
                 output = ssh.send_command(command)
                 result[command] = output
-                logging.debug("<<<< Received ", host, "\n\n",result)
+                logger.debug("<<<< Received {}{}{}".format(host,"\n",result))
         return result
     except (NetMikoTimeoutException, NetMikoAuthenticationException, SSHException) as error:
         print(error)
@@ -63,16 +58,17 @@ if __name__ == "__main__":
     passwd = os.environ.get("SSH_PASSWORD")
     enable = os.environ.get("SSH_ENABLE_PASSWORD")
 
-    with open("devices_envvar.yaml") as f:
+    with open("devices.yaml") as f:
         devices = yaml.safe_load(f)
 
+    print("==========")
     for device in devices:
         device = {**device, "username": user, "password": passwd, "secret": enable}
         result = send_show_command(device, ["show version"])
         # pprint(result, width=120)
-        print("==========")
         version_match = version_pattern.search(result["show version"])
         image_match = image_pattern.search(result["show version"])
-        print(version_match.group(1), "\n", image_match.group(1))
-        print("==========")
+        print(device["host"],version_match.group(1), image_match.group(1).replace("/",""))
+        
+    print("==========")
 
