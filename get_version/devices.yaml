@@ -1,0 +1,6 @@
+- device_type: cisco_ios
+  host: 192.168.0.35
+  username: ${SSH_USERNAME}
+  password: ${SSH_PASSWORD}
+  secret: ${SSH_ENABLE_PASSWORD}
+  timeout: 5
