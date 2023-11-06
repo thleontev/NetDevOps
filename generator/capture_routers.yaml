@@ -1,0 +1,14 @@
+name_file: capture_router.conf
+capture_acl: ACL_CAP
+capture_name: CAP1
+interface_name_osn: Serial0/2/1:2
+interface_name_res: Serial0/2/1:2
+buffer_size: 100
+ip_tftp: n.n.n.nn
+network_filter:
+  - network: a.a.a.a 0.0.0.255
+  - network: b.b.b.b 0.0.0.255
+host_filter:
+  - host: c.c.c.c
+  - host: d.d.d.d
+template: templates/capture_routers.conf
